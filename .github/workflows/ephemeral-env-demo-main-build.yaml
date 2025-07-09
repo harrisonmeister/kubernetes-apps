@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'ephemeral-env-app/**'
+      - '.github/workflows/ephemeral-env-demo-main-build.yaml'
 jobs:
   determine-version:
     runs-on: ubuntu-latest
@@ -39,3 +40,23 @@ jobs:
         release_number: ${{ needs.determine-version.outputs.version }}
     outputs: 
       release_number: ${{ steps.create-release.outputs.release_number }}
+  deploy-octopus-release:
+    name: Deploy to Development 🐙
+    permissions:
+      id-token: write
+    needs: [determine-version, create-octopus-release]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to Octopus Deploy 🐙
+      uses: OctopusDeploy/login@v1
+      with: 
+        server: ${{ env.MARKH_OCTOPUS_URL }}
+        service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+    - name: Deploy to Development 🐙
+      uses: OctopusDeploy/deploy-release-action@v3
+      id: "deploy-release"
+      with:
+        project: "Kubernetes echo"
+        release_number: ${{ needs.create-octopus-release.outputs.release_number }}
+        environments: |
+          Development
