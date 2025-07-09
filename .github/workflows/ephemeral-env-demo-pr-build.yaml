@@ -1,0 +1,41 @@
+name: Kubernetes Echo EE PR Workflow
+
+on:
+  pull_request:
+    paths:
+      - 'ephemeral-env-app/**'
+jobs:
+  determine-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set version
+        id: set-version
+        run: echo "VERSION=$(date +'%Y%m%d').${{ github.run_number }}.${{ github.run_attempt }}-pr-${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+  create-octopus-release:
+    name: Create Octopus Release 🐙
+    permissions:
+      id-token: write
+    needs: [determine-version]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to Octopus Deploy 🐙
+      uses: OctopusDeploy/login@v1
+      with: 
+        server: ${{ env.MARKH_OCTOPUS_URL }}
+        service_account_id: aea6896c-9531-4a42-908b-ecf6bd06cffb
+    - name: Create Octopus Release 🐙
+      uses: OctopusDeploy/create-release-action@v3
+      id: "create-release"
+      with:
+        project: "Kubernetes echo"
+        release_number: ${{ needs.determine-version.outputs.version }}
+        custom_fields: |
+            PullRequestNumber: ${{ github.event.pull_request.number }}
+    outputs: 
+      release_number: ${{ steps.create-release.outputs.release_number }}
