@@ -6,7 +6,8 @@ on:
       - 'ephemeral-env-app/**'
 env:
   OCTOPUS_URL: ${{ secrets.MARKH_OCTOPUS_URL }}
-  OCTOPUS_SPACE: "Ephemeral Environments"   
+  OCTOPUS_SPACE: "Ephemeral Environments"
+  SERVICE_ACCOUNT_ID: aea6896c-9531-4a42-908b-ecf6bd06cffb    
 jobs:
   determine-version:
     runs-on: ubuntu-latest
@@ -31,7 +32,7 @@ jobs:
       uses: OctopusDeploy/login@v1
       with: 
         server: ${{ env.OCTOPUS_URL }}
-        service_account_id: aea6896c-9531-4a42-908b-ecf6bd06cffb
+        service_account_id: ${{ env.SERVICE_ACCOUNT_ID }}
     - name: Create Octopus Release 🐙
       uses: OctopusDeploy/create-release-action@v3
       id: "create-release"
