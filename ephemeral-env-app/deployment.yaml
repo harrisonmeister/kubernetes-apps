@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ephemeral-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ephemeral-app
+  template:
+    metadata:
+      labels:
+        app: ephemeral-app
+    spec:
+      containers:
+      - name: ephemeral-container
+        image: hashicorp/http-echo:0.2.3
+        args:
+          - "-text=Hello from the Octopus #{Octopus.Environment.Name} ephemeral environment!"
+          - "-listen=:8080"
+        ports:
+          - containerPort: 8080
