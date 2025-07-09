@@ -27,7 +27,7 @@ jobs:
     - name: Login to Octopus Deploy 🐙
       uses: OctopusDeploy/login@v1
       with: 
-        server: ${{ env.MARKH_OCTOPUS_URL }}
+        server: ${{ secrets.MARKH_OCTOPUS_URL }}
         service_account_id: aea6896c-9531-4a42-908b-ecf6bd06cffb
     - name: Create Octopus Release 🐙
       uses: OctopusDeploy/create-release-action@v3
