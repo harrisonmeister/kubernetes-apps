@@ -4,7 +4,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: argocd-helmapp.harrisonmeister
+    - host: financia-web-test.harrisonmeister
       paths: []
   tls: []
   #  - secretName: chart-example-tls
@@ -14,4 +14,4 @@ ingress:
 service:
   type: NodePort
   port: 8080
-  nodePort: 32003
+  nodePort: 32002
