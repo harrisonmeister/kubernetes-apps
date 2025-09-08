@@ -13,7 +13,7 @@ spec:
     targetRevision: HEAD
     path: financia
     helm:
-      valuesFiles:
+      valueFiles:
         - values.yaml
         - values-prod.yaml
   destination:
