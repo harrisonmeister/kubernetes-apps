@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: stellar-test
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+    targetRevision: HEAD
+    path: manifests/stellar-web/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: stellar-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
