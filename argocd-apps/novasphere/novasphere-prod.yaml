@@ -1,20 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: stellar-dev
+  name: novasphere-prod
   annotations:
-    argo.octopus.com/project: "stellar"
-    argo.octopus.com/environment: "development"
+    argo.octopus.com/project: "novasphere"
+    argo.octopus.com/environment: "production"
     argo.octopus.com/instance: "markharrison.octopus.app"
 spec:
   project: default
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: manifests/stellar-web/dev
+    path: novasphere
+    helm:
+      valuesFiles:
+        - https://raw.githubusercontent.com/harrisonmeister/kubernetes-apps/refs/heads/main/helm-values/novasphere/values.yaml
+        - https://raw.githubusercontent.com/harrisonmeister/kubernetes-apps/refs/heads/main/helm-values/novasphere/values-prod.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: stellar-dev
+    namespace: novasphere-prod
   syncPolicy:
     automated:
       prune: true

@@ -6,8 +6,6 @@ metadata:
     argo.octopus.com/project: "stellar"
     argo.octopus.com/environment: "test"
     argo.octopus.com/instance: "markharrison.octopus.app"
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
