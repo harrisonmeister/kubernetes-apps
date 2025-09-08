@@ -8,17 +8,22 @@ metadata:
     argo.octopus.com/instance: "markharrison.octopus.app"
 spec:
   project: default
-  source:
-    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
-    targetRevision: HEAD
-    path: novasphere
-    helm:
-      valuesFiles:
-        - https://raw.githubusercontent.com/harrisonmeister/kubernetes-apps/refs/heads/main/helm-values/novasphere/values.yaml
-        - https://raw.githubusercontent.com/harrisonmeister/kubernetes-apps/refs/heads/main/helm-values/novasphere/values-dev.yaml
+  sources:
+    # Source 1: The Helm chart repository
+    - repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+      targetRevision: HEAD
+      path: novasphere
+    # Source 2: The values files repository
+    - repoURL: https://github.com/harrisonmeister/kubernetes-helm-values.git
+      targetRevision: HEAD
+      ref: values-repo
   destination:
     server: https://kubernetes.default.svc
     namespace: novasphere-dev
+  helm:
+    valuesFiles:
+      - $values-repo/novasphere/values.yaml
+      - $values-repo/novasphere/values-dev.yaml  
   syncPolicy:
     automated:
       prune: true
