@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: financia-dev
+  annotations:
+    argo.octopus.com/project: "financia"
+    argo.octopus.com/environment: "development"
+    argo.octopus.com/instance: "markharrison.octopus.app"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+    targetRevision: HEAD
+    path: financia
+    helm:
+      valuesFiles:
+        - values.yaml
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: financia-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
