@@ -5,6 +5,7 @@ metadata:
   annotations:
     argo.octopus.com/project: "novasphere"
     argo.octopus.com/environment: "production"
+    argo.octopus.com/image-replace-path: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
     argo.octopus.com/instance: "markharrison.octopus.app"
 spec:
   project: default
