@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       labels:
-        app: luminar # Must match the selector above.
+        app: luminar-app # Must match the selector above.
     spec:
       containers:
       - name: luminar-container
