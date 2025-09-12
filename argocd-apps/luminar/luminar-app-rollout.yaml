@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  # The name of your rollout. This will be the name of the Kubernetes resource.
+  name: luminar-app-rollout
+spec:
+  # This selector links the rollout to the pods it manages. It must match the labels below.
+  selector:
+    matchLabels:
+      app: luminar-app
+  # How many replicas of your application to run.
+  replicas: 5
+  # The deployment strategy. 'Canary' is a good choice for a simple rollout.
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20  # Deploy 20% of the new version's pods.
+      - pause: {}      # Wait for a manual approval before proceeding.
+      - setWeight: 60  # Deploy 60% of the new version's pods.
+      - pause: {duration: 10s} # Wait for 10 seconds before proceeding.
+  # The pod template defines the container and other pod specifications.
+  template:
+    metadata:
+      labels:
+        app: luminar # Must match the selector above.
+    spec:
+      containers:
+      - name: luminar-container
+        image: harrisonmeister/gitops-simple-app
+        # This is the image pull policy.
+        imagePullPolicy: IfNotPresent
+        # The port your application exposes.
+        ports:
+        - containerPort: 8080
