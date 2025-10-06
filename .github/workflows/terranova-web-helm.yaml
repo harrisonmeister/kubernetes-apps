@@ -1,0 +1,74 @@
+name: Docker Build & Push (terranova-web-app)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terranova-web/**'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    env:
+      DOCKER_USER: harrisonmeister
+      IMAGE_NAME: terranova-web
+
+    steps:
+      - name: 1. Calculate Version Tag
+        id: version
+        run: |
+          DATE=$(date +%Y.%m.%d)
+          VERSION_TAG="${DATE}.${{ github.run_number }}"
+          echo "tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "Generated tag: $VERSION_TAG"
+
+      - name: 2. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 3. Set up QEMU (for multi-platform)
+        uses: docker/setup-qemu-action@v3
+
+      - name: 4. Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 5. Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 6. Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 7. Determine tags (for Docker Hub and GHCR)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: 8. Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./terranova-web
+          file: ./terranova-web/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
