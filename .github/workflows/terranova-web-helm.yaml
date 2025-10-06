@@ -18,11 +18,14 @@ jobs:
       contents: read
       packages: write 
       id-token: write
-      attestations: write # Required to upload the attestation artifact
+      attestations: write
     
     env:
       DOCKER_USER: harrisonmeister
       IMAGE_NAME: terranova-web
+      SBOM_OUTPUT_FILE: sbom.json
+      OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
+      OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
 
     steps:
       - name: 1. Calculate Version Tag
@@ -76,30 +79,61 @@ jobs:
           load: true
           tags: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest 
           platforms: linux/amd64
+      
+      - name: 9. Generate CycloneDX SBOM (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: '${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest'
+          format: 'cyclonedx'
+          output: ${{ env.SBOM_OUTPUT_FILE }}
+          
+      - name: 10. Zip SBOM Package for Octopus Deploy
+        id: package
+        run: |
+          PACKAGE_ID="${{ env.IMAGE_NAME }}-sbom"
+          VERSION="${{ steps.version.outputs.tag }}"
+          ZIP_FILENAME="${PACKAGE_ID}.${VERSION}.zip"
+          
+          # Create a directory to ensure the zip is structured correctly
+          mkdir -p packaging
+          
+          # Zip the SBOM file
+          zip -j packaging/$ZIP_FILENAME ${{ env.SBOM_OUTPUT_FILE }}
+          
+          echo "package_file=packaging/$ZIP_FILENAME" >> $GITHUB_OUTPUT
 
-      - name: 9. Attest Build Provenance for Docker Hub
+      - name: 11. Login to Octopus Deploy 🐙
+        uses: OctopusDeploy/login@v1
+        with: 
+          server: ${{ secrets.DEMO_OCTOPUS_URL }}
+          service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+      
+      - name: 12. Push SBOM Package to Octopus Deploy
+        uses: OctopusDeploy/push-package-action@v3
+        with:
+          packages: |
+            ${{ steps.package.outputs.package_file }}
+
+      - name: 12. Attest Build Provenance for Docker Hub
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: false
 
-      - name: 10. Attest Build Provenance for GHCR
+      - name: 13. Attest Build Provenance for GHCR
         uses: actions/attest-build-provenance@v1
         with:
           subject-name: ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: false
 
-      - name: 11. Final Push to Docker Hub and GHCR
+      - name: 14. Final Push to Docker Hub and GHCR
         run: |
-          # Define the local tag
           LOCAL_TAG="${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest"
-
-          # Combine all metadata tags and custom tags
           ALL_TAGS="${{ steps.meta.outputs.tags }},${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }},ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}"
           
-          # Manually tag and push the image to all target repositories
           for TAG in $(echo $ALL_TAGS | sed "s/,/ /g"); do
             echo "Pushing $TAG"
             docker tag $LOCAL_TAG $TAG
