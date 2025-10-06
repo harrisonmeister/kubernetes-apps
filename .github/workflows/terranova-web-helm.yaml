@@ -23,13 +23,13 @@ jobs:
     env:
       DOCKER_USER: harrisonmeister
       IMAGE_NAME: terranova-web
-      SBOM_OUTPUT_FILE: sbom.json
+      SBOM_OUTPUT_FILE: dependency-results.sbom.json
       SBOM_PACKAGE_NAME: terranova-web-sbom
       OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
       OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
 
     steps:
-      - name: 1. Calculate Version Tag
+      - name: Calculate Version Tag
         id: version
         run: |
           DATE=$(date +%Y.%m.%d)
@@ -37,59 +37,53 @@ jobs:
           echo "tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
           echo "Generated tag: $VERSION_TAG"
 
-      - name: 2. Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: 3. Set up QEMU (for multi-platform)
+      - name: Set up QEMU (for multi-platform)
         uses: docker/setup-qemu-action@v3
 
-      - name: 4. Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: 5. Log in to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 6. Log in to GitHub Container Registry (GHCR)
+      - name: Log in to GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 7. Determine tags (for Docker Hub and GHCR)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
-            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-
-      - name: 8. Build and Load Image Locally
+      - name: Build and Push Image
         id: build
         uses: docker/build-push-action@v5
         with:
           context: ./terranova-web
           file: ./terranova-web/Dockerfile
-          push: false
-          load: true
-          tags: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest 
+          push: true
+          load: false
+          tags: |
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
           platforms: linux/amd64
       
-      - name: 9. Generate CycloneDX SBOM (Trivy)
-        uses: aquasecurity/trivy-action@master
+      - name: Run Trivy in GitHub SBOM mode
+        uses: aquasecurity/trivy-action@0.32.0
         with:
-          scan-type: 'image'
-          image-ref: '${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest'
-          format: 'cyclonedx'
+          scan-type: "fs"
+          format: "github"
           output: ${{ env.SBOM_OUTPUT_FILE }}
+          scan-ref: "."
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
           
-      - name: 10. Zip SBOM Package for Octopus Deploy
+      - name: Zip SBOM Package for Octopus Deploy 🐙
         id: package
         run: |
           PACKAGE_ID="${{ env.SBOM_PACKAGE_NAME }}"
@@ -104,13 +98,50 @@ jobs:
           
           echo "package_file=packaging/$ZIP_FILENAME" >> $GITHUB_OUTPUT
 
+      - name: Create the Subject Checksum file for Attestation Build Provenance
+        id: determine_sbom_hash
+        shell: pwsh
+        run: |
+          $packageHash = Get-FileHash -path "${{ steps.package.outputs.package_file }}" -Algorithm SHA256
+          $hashToSave = $packageHash.Hash
+          Write-Host "The SBOM package hash is: $hashToSave"
+
+          "SBOM_HASH=$hashToSave" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              
+      - name: Create the subject checksum file for provenance
+        shell: pwsh
+        run: |
+          $cleanedSbomSha = $("${{ steps.determine_sbom_hash.outputs.SBOM_HASH }}" -replace "sha256:", "").Trim()
+          $cleanedImageSha = $("${{ steps.build.outputs.digest }}" -replace "sha256:", "").Trim()
+
+          $dockerImageSubject = "${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}".Trim()
+          $ghcrImageSubject = "ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}".Trim()
+          $sbomSubject = "${{ steps.package.outputs.package_file }}".Trim()
+
+          Write-Host "The DockerHub image is $cleanedImageSha  $dockerImageSubject"
+          Write-Host "The GHCR image is $cleanedImageSha  $ghcrImageSubject"
+          Write-Host "The SBOM information is $cleanedSbomSha  $sbomSubject"
+
+          $subjectText = @"
+          $cleanedImageSha  $dockerImageSubject
+          $cleanedImageSha  $ghcrImageSubject
+          $cleanedSbomSha  $sbomSubject
+          "@
+
+          Write-Host "Creating the checksums file"
+          New-Item -Path . -Name "subject.checksums.txt" -ItemType "File" -Value $subjectText
+      - name: Generate attestation from provenance
+        uses: actions/attest-build-provenance@v2
+        id: attestations
+        with:
+          subject-checksums: subject.checksums.txt
       - name: 11. Login to Octopus Deploy 🐙
         uses: OctopusDeploy/login@v1
         with: 
           server: ${{ secrets.DEMO_OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
       
-      - name: 12. Push SBOM Package to Octopus Deploy 🐙
+      - name: Push SBOM Package to Octopus Deploy 🐙
         uses: OctopusDeploy/push-package-action@v3
         with:
           packages: |
@@ -122,27 +153,4 @@ jobs:
           packages: |
             ${{ env.SBOM_PACKAGE_NAME }}
 
-      - name: 12. Attest Build Provenance for Docker Hub
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: false
-
-      - name: 13. Attest Build Provenance for GHCR
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.build.outputs.digest }}
-          push-to-registry: false
-
-      - name: 14. Final Push to Docker Hub and GHCR
-        run: |
-          LOCAL_TAG="${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest"
-          ALL_TAGS="${{ steps.meta.outputs.tags }},${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }},ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}"
-          
-          for TAG in $(echo $ALL_TAGS | sed "s/,/ /g"); do
-            echo "Pushing $TAG"
-            docker tag $LOCAL_TAG $TAG
-            docker push $TAG
-          done
+  
