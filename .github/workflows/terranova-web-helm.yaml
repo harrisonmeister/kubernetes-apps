@@ -110,7 +110,7 @@ jobs:
           server: ${{ secrets.DEMO_OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
       
-      - name: 12. Push SBOM Package to Octopus Deploy
+      - name: 12. Push SBOM Package to Octopus Deploy 🐙
         uses: OctopusDeploy/push-package-action@v3
         with:
           packages: |
@@ -120,7 +120,7 @@ jobs:
         with:
           version: ${{ steps.version.outputs.tag }}
           packages: |
-            ${{ env.SBOM-PACKAGE-NAME }}
+            ${{ env.SBOM_PACKAGE_NAME }}
 
       - name: 12. Attest Build Provenance for Docker Hub
         uses: actions/attest-build-provenance@v1
