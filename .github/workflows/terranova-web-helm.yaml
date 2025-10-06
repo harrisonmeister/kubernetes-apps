@@ -24,6 +24,7 @@ jobs:
       DOCKER_USER: harrisonmeister
       IMAGE_NAME: terranova-web
       SBOM_OUTPUT_FILE: sbom.json
+      SBOM_PACKAGE_NAME: terranova-web-sbom
       OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
       OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
 
@@ -91,7 +92,7 @@ jobs:
       - name: 10. Zip SBOM Package for Octopus Deploy
         id: package
         run: |
-          PACKAGE_ID="${{ env.IMAGE_NAME }}-sbom"
+          PACKAGE_ID="${{ env.SBOM_PACKAGE_NAME }}"
           VERSION="${{ steps.version.outputs.tag }}"
           ZIP_FILENAME="${PACKAGE_ID}.${VERSION}.zip"
           
@@ -119,7 +120,7 @@ jobs:
         with:
           version: ${{ steps.version.outputs.tag }}
           packages: |
-            ${{ env.SBOM_OUTPUT_FILE }}
+            ${{ env.SBOM-PACKAGE-NAME }}
 
       - name: 12. Attest Build Provenance for Docker Hub
         uses: actions/attest-build-provenance@v1
