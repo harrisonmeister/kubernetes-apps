@@ -16,13 +16,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-      id-token: write 
-      attestations: write
+      packages: write 
+      id-token: write
+      attestations: write # Required to upload the attestation artifact
     
     env:
-      DOCKER_USER: harrisonmeister 
-      IMAGE_NAME: terranova-web 
+      DOCKER_USER: harrisonmeister
+      IMAGE_NAME: terranova-web
 
     steps:
       - name: 1. Calculate Version Tag
@@ -74,23 +74,29 @@ jobs:
           file: ./terranova-web/Dockerfile
           push: false
           load: true
-          # Explicitly construct the local tag here where variable interpolation works
           tags: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest 
           platforms: linux/amd64
 
-      - name: 9. Attest Build Provenance
+      - name: 9. Attest Build Provenance for Docker Hub
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
+          subject-name: ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: false
 
-      - name: 10. Final Push to Docker Hub and GHCR
+      - name: 10. Attest Build Provenance for GHCR
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: false
+
+      - name: 11. Final Push to Docker Hub and GHCR
         run: |
-          # Define the local tag inside the shell script for easy reference
+          # Define the local tag
           LOCAL_TAG="${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest"
 
-          # Combine all metadata tags and custom tags into one variable
+          # Combine all metadata tags and custom tags
           ALL_TAGS="${{ steps.meta.outputs.tags }},${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }},ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}"
           
           # Manually tag and push the image to all target repositories
