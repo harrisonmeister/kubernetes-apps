@@ -5,7 +5,7 @@ WORKDIR /tmp/web-app
 COPY . .
 
 RUN apk update && apk upgrade --no-cache && \
-	CGO_ENABLED=0 GOOS=linux go build 
+	CGO_ENABLED=0 GOOS=linux go build -o terranova-web-app
 
 FROM scratch
 COPY --from=build-env /tmp/web-app/terranova-web-app /app/terranova-web
