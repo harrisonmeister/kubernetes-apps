@@ -114,6 +114,12 @@ jobs:
         with:
           packages: |
             ${{ steps.package.outputs.package_file }}
+      - name: Push build information to Octopus Deploy 🐙
+        uses: OctopusDeploy/push-build-information-action@v3
+        with:
+          version: ${{ steps.version.outputs.tag }}
+          packages: |
+            ${{ env.SBOM_OUTPUT_FILE }}
 
       - name: 12. Attest Build Provenance for Docker Hub
         uses: actions/attest-build-provenance@v1
