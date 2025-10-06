@@ -16,8 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Required for GHCR
-      id-token: write # Required for Attestation
+      packages: write
+      id-token: write 
+      attestations: write
     
     env:
       DOCKER_USER: harrisonmeister 
