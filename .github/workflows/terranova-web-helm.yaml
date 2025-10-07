@@ -152,5 +152,5 @@ jobs:
           version: ${{ steps.version.outputs.tag }}
           packages: |
             ${{ env.SBOM_PACKAGE_NAME }}
-
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
   
