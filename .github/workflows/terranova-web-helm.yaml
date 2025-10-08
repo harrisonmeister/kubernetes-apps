@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/terranova-web-helm.yaml'
+      - 'helm-charts/terranova-web/**'
       - 'terranova-web/**'
   schedule:
     - cron: '0 6 * * 1-5' # Monday to Friday at 6:00 AM UTC
