@@ -5,7 +5,7 @@ resources:
 
 images:
 - name: nginx
-  newTag: 1.28.0-alpine
+  newTag: "1.27.5-alpine"
 
 replicas:
 - name: aetherflow-app
