@@ -13,7 +13,7 @@ spec:
   sources:
     - repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
       targetRevision: HEAD
-      path: novasphere
+      path: helm-charts/novasphere
       helm:
         valueFiles:
           - $values-repo/novasphere/values.yaml
