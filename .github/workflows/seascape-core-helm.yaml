@@ -10,7 +10,7 @@ on:
       - 'seascape-core/**'
       # Don't include 'helm-charts/seascape-core/**' here to avoid triggering recursive builds (Octopus commits to the values file in this repo)
   schedule:
-    - cron: '0 7 * * 1-5' # Monday to Friday at 7:00 AM UTC
+    - cron: '0 7 * * 2-5' # Tuesday to Friday at 7:00 AM UTC
   workflow_dispatch:
 
 jobs:
