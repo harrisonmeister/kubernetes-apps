@@ -1,20 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: stellar-prod
+  name: stellar-dev
   annotations:
     argo.octopus.com/project: "stellar"
-    argo.octopus.com/environment: "production"
-    argo.octopus.com/instance: "markharrison.octopus.app"
+    argo.octopus.com/environment: "development"
+    argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: manifests/stellar-web/prod
+    path: manifests/stellar/dev
   destination:
     server: https://kubernetes.default.svc
-    namespace: stellar-prod
+    namespace: stellar-dev
   syncPolicy:
     automated:
       prune: true

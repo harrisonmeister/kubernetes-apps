@@ -5,13 +5,13 @@ metadata:
   annotations:
     argo.octopus.com/project: "stellar"
     argo.octopus.com/environment: "test"
-    argo.octopus.com/instance: "markharrison.octopus.app"
+    argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: manifests/stellar-web/test
+    path: manifests/stellar/test
   destination:
     server: https://kubernetes.default.svc
     namespace: stellar-test
