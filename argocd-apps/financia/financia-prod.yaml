@@ -3,7 +3,7 @@ kind: Application
 metadata:
   name: financia-web-prod
   annotations:
-    argo.octopus.com/project: "financia"
+    argo.octopus.com/project: "financia-web"
     argo.octopus.com/environment: "production"
     # When there are multiple sources, we need an annotation to tell us which file path annotations belong to (Note: the actual name of the alias can be arbitrary)
     # if an alias is not provided for a path, that values file will be ignored
