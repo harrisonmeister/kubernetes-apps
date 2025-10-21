@@ -19,4 +19,4 @@ ingress:
 service:
   type: NodePort
   port: 8080
-  nodePort: 30810
+  nodePort: 30610
