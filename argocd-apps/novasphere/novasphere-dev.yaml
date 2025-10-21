@@ -5,9 +5,9 @@ metadata:
   annotations:
     argo.octopus.com/project: "novasphere"
     argo.octopus.com/environment: "development"
-    argo.octopus.com/image-replace-alias.values-base: "$values-repo/novasphere/values-dev.yaml"
-    argo.octopus.com/image-replace-paths.values-base: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-    argo.octopus.com/instance: "markharrison.octopus.app"
+    argo.octopus.com/image-replace-alias.env-values: "$values-repo/novasphere/values-dev.yaml"
+    argo.octopus.com/image-replace-paths.env-values: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
   sources:
