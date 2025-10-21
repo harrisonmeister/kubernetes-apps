@@ -7,8 +7,8 @@ metadata:
     argo.octopus.com/environment: "test"
     # When there are multiple sources, we need an annotation to tell us which file path annotations belong to (Note: the actual name of the alias can be arbitrary)
     # if an alias is not provided for a path, that values file will be ignored
-    argo.octopus.com/image-replace-alias.env: "values-test.yaml"
-    argo.octopus.com/image-replace-paths.env: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    argo.octopus.com/image-replace-alias.env-values: "values-test.yaml"
+    argo.octopus.com/image-replace-paths.env-values: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
     argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
