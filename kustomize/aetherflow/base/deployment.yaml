@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aetherflow-app
+  labels:
+    app: aetherflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aetherflow
+  template:
+    metadata:
+      labels:
+        app: aetherflow
+    spec:
+      containers:
+      - name: app-container
+        image: nginx:alpine
+        ports:
+        - containerPort: 80

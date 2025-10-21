@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aetherflow-dev-kustomize
+  namespace: argocd
+  annotations:
+    argo.octopus.com/project: "aetherflow"
+    argo.octopus.com/environment: "development"
+    argo.octopus.com/instance: "markharrison.octopus.app"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+    targetRevision: HEAD
+    path: kustomize/aetherflow/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aetherflow-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
