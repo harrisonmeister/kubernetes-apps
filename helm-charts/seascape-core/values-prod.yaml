@@ -1,0 +1,22 @@
+image:
+  pullPolicy: IfNotPresent
+  repository: harrisonmeister/seascape-core
+  tag: "2025.10.21.1"
+  
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: seascape-core.harrisonmeister
+      paths: []
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30810

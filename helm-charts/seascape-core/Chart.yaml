@@ -1,0 +1,4 @@
+apiVersion: v2
+description: The seascape-core Helm chart
+name: seascape-core
+version: 0.6.8
