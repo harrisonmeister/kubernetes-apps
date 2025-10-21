@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - '.github/workflows/seascape-core-helm.yaml'
+      - 'argocd-apps/seascape/**'
       - 'helm-charts/seascape-core/**'
       - 'seascape-core/**'
   schedule:
