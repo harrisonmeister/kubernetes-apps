@@ -1,18 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: financia-dev
+  name: financia-web-dev
   annotations:
-    argo.octopus.com/project: "financia"
+    argo.octopus.com/project: "financia-web"
     argo.octopus.com/environment: "development"
     argo.octopus.com/image-replace-paths: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-    argo.octopus.com/instance: "markharrison.octopus.app"
+    argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: financia
+    path: helm-charts/financia-web
     helm:
       valueFiles:
         - values.yaml
