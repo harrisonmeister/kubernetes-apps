@@ -11,7 +11,7 @@ on:
 
 env:
   DOCKER_USER: harrisonmeister
-  IMAGE_NAME: triton-key
+  HELM_PACKAGE_NAME: triton-key-chart
   CHART_SOURCE_DIR: ./helm-charts/triton-key
   GHCR_OCI_REPO: harrisonmeister
 
@@ -44,6 +44,7 @@ jobs:
         run: |
           set -euo pipefail
           
+          # Export environment variable for yq's strenv() function to read
           export CHART_VERSION 
           
           yq e -i -o yaml '
@@ -56,7 +57,7 @@ jobs:
           
           helm package "${{ env.CHART_SOURCE_DIR }}"
 
-          PACKAGE_FILE=$(ls ${IMAGE_NAME}-*.tgz)
+          PACKAGE_FILE=$(ls ${HELM_PACKAGE_NAME}-*.tgz)
           echo "chart_archive_name=${PACKAGE_FILE}" >> "$GITHUB_OUTPUT"
           echo "Packaged chart: ${PACKAGE_FILE}"
 
