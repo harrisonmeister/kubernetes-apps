@@ -6,7 +6,7 @@ metadata:
   annotations:
     argo.octopus.com/project: "aetherflow"
     argo.octopus.com/environment: "development"
-    argo.octopus.com/instance: "markharrison.octopus.app"
+    argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
   source:
