@@ -15,10 +15,11 @@ spec:
     server: https://kubernetes.default.svc
     namespace: triton-key-test
   sources:
-    - repoURL: oci://ghcr.io/harrisonmeister/helm-charts/triton-key
-      targetRevision: 0.5.2
+    - repoURL: oci://ghcr.io/harrisonmeister/triton-key-chart
+      targetRevision: 0.4.11
       helm:
         valueFiles:
+          - values.yaml
           - $values-source/values.yaml
     - repoURL: https://github.com/harrisonmeister/kubernetes-helm-values.git
       targetRevision: HEAD
