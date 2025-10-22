@@ -1,0 +1,156 @@
+name: Docker Build & Push (triton-key-app)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/triton-key-docker.yaml'
+      - 'apps/triton-key/**'
+  schedule:
+    - cron: '0 4 * * 2-5' # Tuesday to Friday at 4:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write 
+      id-token: write
+      attestations: write
+    
+    env:
+      DOCKER_USER: harrisonmeister
+      IMAGE_NAME: triton-key
+      SBOM_OUTPUT_FILE: dependency-results.sbom.json
+      SBOM_PACKAGE_NAME: triton-key-sbom
+      OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
+      OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
+
+    steps:
+      - name: Calculate Version Tag
+        id: version
+        run: |
+          DATE=$(date +%Y.%m.%d)
+          VERSION_TAG="${DATE}.${{ github.run_number }}"
+          echo "tag=${VERSION_TAG}" >> $GITHUB_OUTPUT
+          echo "Generated tag: $VERSION_TAG"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (for multi-platform)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push Image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/triton-key
+          file: ./apps/triton-key/Dockerfile
+          push: true
+          load: false
+          tags: |
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
+          platforms: linux/amd64
+      
+      - name: Run Trivy in GitHub SBOM mode
+        uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: "fs"
+          format: "github"
+          output: ${{ env.SBOM_OUTPUT_FILE }}
+          scan-ref: "."
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Zip SBOM Package for Octopus Deploy 🐙
+        id: package
+        run: |
+          PACKAGE_ID="${{ env.SBOM_PACKAGE_NAME }}"
+          VERSION="${{ steps.version.outputs.tag }}"
+          ZIP_FILENAME="${PACKAGE_ID}.${VERSION}.zip"
+          
+          # Create a directory to ensure the zip is structured correctly
+          mkdir -p packaging
+          
+          # Zip the SBOM file
+          zip -j packaging/$ZIP_FILENAME ${{ env.SBOM_OUTPUT_FILE }}
+          
+          echo "package_file=packaging/$ZIP_FILENAME" >> $GITHUB_OUTPUT
+
+      - name: Create the Subject Checksum file for Attestation Build Provenance
+        id: determine_sbom_hash
+        shell: pwsh
+        run: |
+          $packageHash = Get-FileHash -path "${{ steps.package.outputs.package_file }}" -Algorithm SHA256
+          $hashToSave = $packageHash.Hash
+          Write-Host "The SBOM package hash is: $hashToSave"
+
+          "SBOM_HASH=$hashToSave" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              
+      - name: Create the subject checksum file for provenance
+        shell: pwsh
+        run: |
+          $cleanedSbomSha = $("${{ steps.determine_sbom_hash.outputs.SBOM_HASH }}" -replace "sha256:", "").Trim()
+          $cleanedImageSha = $("${{ steps.build.outputs.digest }}" -replace "sha256:", "").Trim()
+
+          $dockerImageSubject = "${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}".Trim()
+          $ghcrImageSubject = "ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}".Trim()
+          $sbomSubject = "${{ steps.package.outputs.package_file }}".Trim()
+
+          Write-Host "The DockerHub image is $cleanedImageSha  $dockerImageSubject"
+          Write-Host "The GHCR image is $cleanedImageSha  $ghcrImageSubject"
+          Write-Host "The SBOM information is $cleanedSbomSha  $sbomSubject"
+
+          $subjectText = @"
+          $cleanedImageSha  $dockerImageSubject
+          $cleanedImageSha  $ghcrImageSubject
+          $cleanedSbomSha  $sbomSubject
+          "@
+
+          Write-Host "Creating the checksums file"
+          New-Item -Path . -Name "subject.checksums.txt" -ItemType "File" -Value $subjectText
+      - name: Generate attestation from provenance
+        uses: actions/attest-build-provenance@v2
+        id: attestations
+        with:
+          subject-checksums: subject.checksums.txt
+      - name: 11. Login to Octopus Deploy 🐙
+        uses: OctopusDeploy/login@v1
+        with: 
+          server: ${{ env.OCTOPUS_URL }}
+          service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+      
+      - name: Push SBOM Package to Octopus Deploy 🐙
+        uses: OctopusDeploy/push-package-action@v3
+        with:
+          packages: |
+            ${{ steps.package.outputs.package_file }}
+      - name: Push build information to Octopus Deploy 🐙
+        uses: OctopusDeploy/push-build-information-action@v3
+        with:
+          version: ${{ steps.version.outputs.tag }}
+          packages: |
+            ${{ env.SBOM_PACKAGE_NAME }}
+            ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
+  
