@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: warp-hub-test
+  annotations:
+    argo.octopus.com/project: "warp-hub"
+    argo.octopus.com/environment: "test"
+    argo.octopus.com/instance: "demo.octopus.app"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+    targetRevision: HEAD
+    path: helm-charts/warp-hub
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-test.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: warp-hub-test
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
