@@ -14,15 +14,15 @@ spec:
     namespace: triton-key-prod
   sources:
     - repoURL: oci://ghcr.io/harrisonmeister/triton-key-chart
-      targetRevision: 0.4.11
+      targetRevision: 0.4.13
+      path: .
       helm:
         valueFiles:
           - values.yaml
-          - $values-source/values.yaml
+          - $values-source/triton-key/prod/values.yaml
     - repoURL: https://github.com/harrisonmeister/kubernetes-helm-values.git
       targetRevision: HEAD
       ref: values-source
-      path: triton-key/prod
   syncPolicy:
     automated:
       prune: true  
