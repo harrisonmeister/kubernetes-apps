@@ -8,7 +8,11 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      nodePort: {{ .Values.service.nodePort }}
       protocol: TCP
+      {{- if eq .Values.service.type "NodePort" }}
+        {{- if .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
+        {{- end }}
+      {{- end }}
   selector:
     {{- include "helm-example.selectorLabels" . | nindent 4 }}
