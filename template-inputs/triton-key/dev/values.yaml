@@ -1,7 +1,0 @@
-replicaCount: #{Project.Pod.ReplicaCount}
-
-image:
-  repository: harrisonmeister/triton-key
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "#{Octopus.Action.Package[triton-key].PackageVersion}"
