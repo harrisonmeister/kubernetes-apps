@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/terranova-web-helm.yaml'
+      - '.github/workflows/terranova-web-docker.yaml'
       - 'helm-charts/terranova-web/**'
       - 'apps/terranova-web/**'
   schedule:

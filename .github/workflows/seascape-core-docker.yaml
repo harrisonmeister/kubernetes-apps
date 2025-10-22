@@ -5,8 +5,7 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/seascape-core-helm.yaml'
-      - 'argocd-apps/seascape/**'
+      - '.github/workflows/seascape-core-docker.yaml'
       - 'apps/seascape-core/**'
       # Don't include 'helm-charts/seascape-core/**' here to avoid triggering recursive builds (Octopus commits to the values file in this repo)
   schedule:
