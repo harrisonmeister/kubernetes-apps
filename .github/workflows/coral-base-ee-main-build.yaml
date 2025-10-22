@@ -1,17 +1,17 @@
-name: Kubernetes Echo EE workflow
+name: Coral Base EE main workflow
 
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
     paths:
-      - 'ephemeral-env-app/**'
-      - '.github/workflows/ephemeral-env-demo-main-build.yaml'
+      - 'apps/coral-base/**'
+      - '.github/workflows/coral-base-main-build.yaml'
 
 env:
-  OCTOPUS_URL: ${{ secrets.MARKH_OCTOPUS_URL }}
-  OCTOPUS_SPACE: "Ephemeral Environments"
-  SERVICE_ACCOUNT_ID: aea6896c-9531-4a42-908b-ecf6bd06cffb     
+  OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
+  OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
+  SERVICE_ACCOUNT_ID: 4d50c8ac-1515-4351-96a7-4a82d55d55ff   
 jobs:
   determine-version:
     runs-on: ubuntu-latest
@@ -41,7 +41,7 @@ jobs:
       uses: OctopusDeploy/create-release-action@v3
       id: "create-release"
       with:
-        project: "Kubernetes echo"
+        project: "Coral Base - EE"
         release_number: ${{ needs.determine-version.outputs.version }}
     outputs: 
       release_number: ${{ steps.create-release.outputs.release_number }}
@@ -61,7 +61,7 @@ jobs:
       uses: OctopusDeploy/deploy-release-action@v3
       id: "deploy-release"
       with:
-        project: "Kubernetes echo"
+        project: "Coral Base - EE"
         release_number: ${{ needs.create-octopus-release.outputs.release_number }}
         environments: |
           Development

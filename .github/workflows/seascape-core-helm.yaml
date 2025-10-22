@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/seascape-core-helm.yaml'
       - 'argocd-apps/seascape/**'
-      - 'seascape-core/**'
+      - 'apps/seascape-core/**'
       # Don't include 'helm-charts/seascape-core/**' here to avoid triggering recursive builds (Octopus commits to the values file in this repo)
   schedule:
     - cron: '0 5 * * 2-5' # Tuesday to Friday at 5:00 AM UTC
@@ -65,8 +65,8 @@ jobs:
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: ./seascape-core
-          file: ./seascape-core/Dockerfile
+          context: ./apps/seascape-core
+          file: ./apps/seascape-core/Dockerfile
           push: true
           load: false
           tags: |
@@ -140,7 +140,7 @@ jobs:
       - name: 11. Login to Octopus Deploy 🐙
         uses: OctopusDeploy/login@v1
         with: 
-          server: ${{ secrets.DEMO_OCTOPUS_URL }}
+          server: ${{ env.OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
       
       - name: Push SBOM Package to Octopus Deploy 🐙

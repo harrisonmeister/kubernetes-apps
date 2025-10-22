@@ -7,7 +7,7 @@ on:
     paths:
       - '.github/workflows/terranova-web-helm.yaml'
       - 'helm-charts/terranova-web/**'
-      - 'terranova-web/**'
+      - 'apps/terranova-web/**'
   schedule:
     - cron: '0 6 * * 2-5' # Tuesday to Friday at 6:00 AM UTC
   workflow_dispatch:
@@ -64,8 +64,8 @@ jobs:
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: ./terranova-web
-          file: ./terranova-web/Dockerfile
+          context: ./apps/terranova-web
+          file: ./apps/terranova-web/Dockerfile
           push: true
           load: false
           tags: |
@@ -139,7 +139,7 @@ jobs:
       - name: 11. Login to Octopus Deploy 🐙
         uses: OctopusDeploy/login@v1
         with: 
-          server: ${{ secrets.DEMO_OCTOPUS_URL }}
+          server: ${{ env.OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
       
       - name: Push SBOM Package to Octopus Deploy 🐙
