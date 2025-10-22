@@ -1,0 +1,12 @@
+replicaCount: #{Project.WarpHub.ReplicaCount}
+image:
+  repository: harrisonmeister/warp-hub
+  tag: "#{Octopus.Action.Package[warp-hub].PackageVersion}"
+  
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: warp-hub-prod.harrisonmeister
+      paths: []
+  tls: []
