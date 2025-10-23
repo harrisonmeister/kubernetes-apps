@@ -7,6 +7,6 @@ ingress:
   enabled: false
   annotations: {}
   hosts:
-    - host: warp-hub-dev.harrisonmeister
+    - host: "#{Project.WarpHub.Ingress.HostName}"
       paths: []
   tls: []
