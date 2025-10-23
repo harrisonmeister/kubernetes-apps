@@ -11,11 +11,7 @@ spec:
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: helm-charts/warp-hub
-    helm:
-      valueFiles:
-        - values.yaml
-        - values-dev.yaml
+    path: helm-charts/warp-hub/dev
   destination:
     server: https://kubernetes.default.svc
     namespace: warp-hub-dev

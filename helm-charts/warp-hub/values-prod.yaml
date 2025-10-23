@@ -1,5 +1,0 @@
-replicaCount: 1
-image:
-  repository: harrisonmeister/warp-hub
-  tag: "2025.10.22.1"
-  
