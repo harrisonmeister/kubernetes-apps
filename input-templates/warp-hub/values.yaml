@@ -1,8 +1,9 @@
 replicaCount: #{Project.WarpHub.ReplicaCount}
 image:
+  pullPolicy: IfNotPresent
   repository: harrisonmeister/warp-hub
   tag: "#{Octopus.Action.Package[warp-hub].PackageVersion}"
-  
+
 ingress:
   enabled: false
   annotations: {}
@@ -10,3 +11,29 @@ ingress:
     - host: "#{Project.WarpHub.Ingress.HostName}"
       paths: []
   tls: []
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Default to ClusterIP for internal access only
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+serviceAccount:
+  create: true
+  name:
+
+podSecurityContext: {}
+
+securityContext: {}
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
