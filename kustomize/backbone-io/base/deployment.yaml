@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backbone-io-app
+  labels:
+    app: backbone-io
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backbone-io
+  template:
+    metadata:
+      labels:
+        app: backbone-io
+    spec:
+      containers:
+      - name: app-container
+        image: nginx:1.28.0-alpine
+        ports:
+        - containerPort: 80

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: backbone-io-dev-kustomize
+  namespace: argocd
+  annotations:
+    argo.octopus.com/project: "backbone-io"
+    argo.octopus.com/environment: "development"
+    argo.octopus.com/instance: "demo.octopus.app"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
+    targetRevision: HEAD
+    path: kustomize/backbone-io/overlays/dev
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: backbone-io-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
