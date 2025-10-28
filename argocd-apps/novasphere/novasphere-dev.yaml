@@ -3,10 +3,12 @@ kind: Application
 metadata:
   name: novasphere-dev
   annotations:
-    argo.octopus.com/project: "novasphere"
-    argo.octopus.com/environment: "development"
-    argo.octopus.com/image-replace-alias.env-values: "$values-repo/novasphere/values-dev.yaml"
-    argo.octopus.com/image-replace-paths.env-values: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+    # A single Ref source used to source the values.yaml for the Helm source. 
+    # In this scenario, both sources need to be named and the paths annotation must explicitly specify the helm source.
+    # Note that the scoping annotation for the project/environment specifies the ref-source while the path annotation is specified for the chart/helm source.
+    argo.octopus.com/project.ref-source: "novasphere"
+    argo.octopus.com/environment.ref-source: "development"
+    argo.octopus.com/image-replace-paths.helm-source: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
     argo.octopus.com/instance: "demo.octopus.app"
 spec:
   project: default
@@ -16,11 +18,13 @@ spec:
       path: helm-charts/novasphere
       helm:
         valueFiles:
-          - $values-repo/novasphere/values.yaml
-          - $values-repo/novasphere/values-dev.yaml
+          - $remote-values/novasphere/values.yaml
+          - $remote-values/novasphere/values-dev.yaml
+      name: helm-source
     - repoURL: https://github.com/harrisonmeister/kubernetes-helm-values.git
       targetRevision: HEAD
-      ref: values-repo
+      ref: remote-values
+      name: ref-source
   destination:
     server: https://kubernetes.default.svc
     namespace: novasphere-dev
