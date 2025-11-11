@@ -1,7 +1,7 @@
 image:
   pullPolicy: IfNotPresent
   repository: harrisonmeister/seascape-core
-  tag: "2025.11.07.12"
+  tag: "2025.11.11.13"
   
 ingress:
   enabled: false
