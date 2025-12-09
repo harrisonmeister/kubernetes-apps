@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'apps/coral-base/**'
+  workflow_dispatch:
 env:
   OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
   OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
