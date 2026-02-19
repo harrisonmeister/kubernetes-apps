@@ -39,6 +39,7 @@ jobs:
       id: "create-release"
       with:
         project: "Coral Base - EE"
+        channel: "Pull requests"
         release_number: ${{ needs.determine-version.outputs.version }}
         custom_fields: |
             PullRequestNumber: ${{ github.event.pull_request.number }}
