@@ -6,7 +6,7 @@ resources:
 images:
 - name: nginx
   newName: nginx
-  newTag: 1.29.1-alpine
+  newTag: 1.29.2
 
 replicas:
 - name: backbone-io-app
