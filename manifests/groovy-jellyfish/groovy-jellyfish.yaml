@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: groovy-jellyfish
+  labels:
+    app: groovy-jellyfish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: groovy-jellyfish
+  template:
+    metadata:
+      labels:
+        app: groovy-jellyfish
+    spec:
+      containers:
+        - name: groovy-jellyfish
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: groovy-jellyfish
+spec:
+  selector:
+    app: groovy-jellyfish
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
