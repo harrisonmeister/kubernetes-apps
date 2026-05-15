@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: disco-squid
+  labels:
+    app: disco-squid
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: disco-squid
+  template:
+    metadata:
+      labels:
+        app: disco-squid
+    spec:
+      containers:
+        - name: disco-squid
+          image: traefik/whoami:v1.10
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: disco-squid
+spec:
+  selector:
+    app: disco-squid
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
