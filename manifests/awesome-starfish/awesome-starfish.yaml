@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: awesome-starfish
+  labels:
+    app: awesome-starfish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: awesome-starfish
+  template:
+    metadata:
+      labels:
+        app: awesome-starfish
+    spec:
+      containers:
+        - name: awesome-starfish
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: awesome-starfish
+spec:
+  selector:
+    app: awesome-starfish
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
