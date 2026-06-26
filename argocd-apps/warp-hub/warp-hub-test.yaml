@@ -11,7 +11,7 @@ spec:
   source:
     repoURL: https://github.com/harrisonmeister/kubernetes-apps.git
     targetRevision: HEAD
-    path: helm-charts/warp-hub/prod
+    path: helm-charts/warp-hub/test
   destination:
     server: https://kubernetes.default.svc
     namespace: warp-hub-test
