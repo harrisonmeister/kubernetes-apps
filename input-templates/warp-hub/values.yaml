@@ -2,7 +2,7 @@ replicaCount: #{Project.WarpHub.ReplicaCount}
 image:
   pullPolicy: IfNotPresent
   repository: harrisonmeister/warp-hub
-  tag: "#{Octopus.Action.Package[warp-hub].PackageVersion}"
+  tag: "#{Octopus.ProcessTemplate[Update warp-hub application manifests].Action[Update Argo CD Application Manifests].Package[Template.ContainerImage].PackageVersion}"
 
 ingress:
   enabled: false
