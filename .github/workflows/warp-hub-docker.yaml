@@ -73,6 +73,8 @@ jobs:
             ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:latest
             ghcr.io/${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.tag }}
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       
       - name: Run Trivy in GitHub SBOM mode
         # v0.35.0
