@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kellys-awesome
+  labels:
+    app: kellys-awesome
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kellys-awesome
+  template:
+    metadata:
+      labels:
+        app: kellys-awesome
+    spec:
+      containers:
+        - name: kellys-awesome
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kellys-awesome
+spec:
+  selector:
+    app: kellys-awesome
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
