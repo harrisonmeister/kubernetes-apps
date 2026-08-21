@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: furious-frog
+  labels:
+    app: furious-frog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: furious-frog
+  template:
+    metadata:
+      labels:
+        app: furious-frog
+    spec:
+      containers:
+        - name: furious-frog
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: furious-frog
+spec:
+  selector:
+    app: furious-frog
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
