@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jacobs-lobster
+  labels:
+    app: jacobs-lobster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jacobs-lobster
+  template:
+    metadata:
+      labels:
+        app: jacobs-lobster
+    spec:
+      containers:
+        - name: jacobs-lobster
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jacobs-lobster
+spec:
+  selector:
+    app: jacobs-lobster
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
