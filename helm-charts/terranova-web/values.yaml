@@ -47,3 +47,23 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+service:
+  type: ClusterIP
+  port: 8080
+  # nodePort is only used when type is NodePort (range 30000-32767)
+  # nodePort: 30808
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations: {}
+  hosts:
+    - host: terranova-web.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: terranova-web-tls
+  #    hosts:
+  #      - terranova-web.local
