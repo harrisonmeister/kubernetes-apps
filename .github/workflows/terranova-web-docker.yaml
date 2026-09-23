@@ -277,7 +277,9 @@ jobs:
             RAW_LOGS=$(curl -sf \
               -H "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
               "$BASE_URL/tasks/$TASK_ID/raw")
-
+            
+            echo "[$(date +%T)] state=$TASK_STATE lines=$(echo -n "$RAW_LOGS" | grep -c '')"
+            
             if [ -n "$RAW_LOGS" ]; then
               CURRENT_LINES=$(echo "$RAW_LOGS" | wc -l)
               if [ "$CURRENT_LINES" -gt "$PRINTED_LINES" ]; then
