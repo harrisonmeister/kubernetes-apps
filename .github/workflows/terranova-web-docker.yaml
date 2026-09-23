@@ -23,6 +23,7 @@ env:
     
 jobs:      
   build:
+    name: Build container image 🐳
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -207,6 +208,7 @@ jobs:
         id: "create-release"
         with:
           project: ${{ env.OCTOPUS_PROJECT }}
+          git_ref: ${{ github.ref }}
           release_number: ${{ needs.build.outputs.version }}
     outputs:
       release_number: ${{ steps.create-release.outputs.release_number }}
