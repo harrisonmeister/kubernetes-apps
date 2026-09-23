@@ -278,7 +278,7 @@ jobs:
               -H "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
               "$BASE_URL/tasks/$TASK_ID/raw")
             
-            echo "[$(date +%T)] state=$TASK_STATE lines=$(echo -n "$RAW_LOGS" | grep -c '')"
+            #echo "[$(date +%T)] state=$TASK_STATE lines=$(echo -n "$RAW_LOGS" | grep -c '')"
             
             if [ -n "$RAW_LOGS" ]; then
               CURRENT_LINES=$(echo "$RAW_LOGS" | wc -l)
