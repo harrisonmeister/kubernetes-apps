@@ -214,7 +214,7 @@ jobs:
       release_number: ${{ steps.create-release.outputs.release_number }}
 
   deploy-octopus-release:
-    name: Deploy to Development 🐙
+    name: Deploy internal tenant to Development  🐙
     permissions:
       id-token: write
     needs: [build, push-build-info, create-octopus-release]
@@ -226,7 +226,7 @@ jobs:
           server: ${{ env.OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
 
-      - name: Deploy internal tenant to Development  🐙
+      - name: Deploy to Development  🐙
         uses: OctopusDeploy/deploy-release-tenanted-action@v4
         id: "deploy-release"
         with:
