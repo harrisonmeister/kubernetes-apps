@@ -15,7 +15,7 @@ on:
 env:
     DOCKER_USER: harrisonmeister
     IMAGE_NAME: terranova-web
-    OCTOPUS_PROJECT: terranova-web
+    OCTOPUS_PROJECT: Terranova web
     SBOM_OUTPUT_FILE: dependency-results.sbom.json
     SBOM_PACKAGE_NAME: terranova-web-sbom
     OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
