@@ -2,7 +2,7 @@ replicaCount: 3
 image:
   pullPolicy: IfNotPresent
   repository: harrisonmeister/warp-hub
-  tag: "2026.09.22.201"
+  tag: "2026.09.23.202"
 
 ingress:
   enabled: false
