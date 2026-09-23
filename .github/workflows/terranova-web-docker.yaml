@@ -12,23 +12,26 @@ on:
     - cron: '0 6 * * 2-5' # Tuesday to Friday at 6:00 AM UTC
   workflow_dispatch:
 
-jobs:
-  build-and-push:
+env:
+    DOCKER_USER: harrisonmeister
+    IMAGE_NAME: terranova-web
+    OCTOPUS_PROJECT: terranova-web
+    SBOM_OUTPUT_FILE: dependency-results.sbom.json
+    SBOM_PACKAGE_NAME: terranova-web-sbom
+    OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
+    OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
+    
+jobs:      
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write 
       id-token: write
       attestations: write
-    
-    env:
-      DOCKER_USER: harrisonmeister
-      IMAGE_NAME: terranova-web
-      SBOM_OUTPUT_FILE: dependency-results.sbom.json
-      SBOM_PACKAGE_NAME: terranova-web-sbom
-      OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
-      OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
-
+      
+    outputs:
+      version: ${{ steps.version.outputs.tag }}
     steps:
       - name: Calculate Version Tag
         id: version
@@ -156,7 +159,7 @@ jobs:
           subject-checksums: ghcr.subject.checksums.txt
 
       - name: Login to Octopus Deploy 🐙
-        uses: OctopusDeploy/login@v1
+        uses: OctopusDeploy/login@v2
         with: 
           server: ${{ env.OCTOPUS_URL }}
           service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
@@ -166,11 +169,125 @@ jobs:
         with:
           packages: |
             ${{ steps.package.outputs.package_file }}
-      - name: Push build information to Octopus Deploy 🐙
-        uses: OctopusDeploy/push-build-information-action@v3
+  push-build-info:
+    name: Push build information to Octopus 🐙
+    permissions:
+      id-token: write
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Octopus Deploy 🐙
+        uses: OctopusDeploy/login@v2
         with:
-          version: ${{ steps.version.outputs.tag }}
+          server: ${{ env.OCTOPUS_URL }}
+          service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+      - name: Push build information to Octopus Deploy 🐙
+        uses: OctopusDeploy/push-build-information-action@v4
+        with:
+          version: ${{ needs.build.outputs.version }}
           packages: |
             ${{ env.SBOM_PACKAGE_NAME }}
             ${{ env.DOCKER_USER }}/${{ env.IMAGE_NAME }}
-  
+
+  create-octopus-release:
+    name: Create Octopus Release 🐙
+    permissions:
+      id-token: write
+    needs: [build, push-build-info]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Octopus Deploy 🐙
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ env.OCTOPUS_URL }}
+          service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+
+      - name: Create Octopus Release 🐙
+        uses: OctopusDeploy/create-release-action@v4
+        id: "create-release"
+        with:
+          project: ${{ env.OCTOPUS_PROJECT }}
+          release_number: ${{ needs.build.outputs.version }}
+    outputs:
+      release_number: ${{ steps.create-release.outputs.release_number }}
+
+  deploy-octopus-release:
+    name: Deploy to Development 🐙
+    permissions:
+      id-token: write
+    needs: [build, push-build-info, create-octopus-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Octopus Deploy 🐙
+        uses: OctopusDeploy/login@v2
+        with:
+          server: ${{ env.OCTOPUS_URL }}
+          service_account_id: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+
+      - name: Deploy internal tenant to Development  🐙
+        uses: OctopusDeploy/deploy-release-tenanted-action@v4
+        id: "deploy-release"
+        with:
+          project: ${{ env.OCTOPUS_PROJECT }}
+          release_number: ${{ needs.create-octopus-release.outputs.release_number }}
+          environment: |
+            Development
+          tenants: |
+            -Internal-
+          
+      - name: Stream Octopus task logs 🐙
+        run: |
+          set +e
+
+          TASK_ID=$(echo '${{ steps.deploy-release.outputs.server_tasks }}' | jq -r '.[0].serverTaskId')
+          OCTOPUS_URL="${{ env.OCTOPUS_URL }}"
+          OCTOPUS_URL="${OCTOPUS_URL%/}"
+
+          ENCODED_SPACE="${{ env.OCTOPUS_SPACE }}"
+          ENCODED_SPACE="${ENCODED_SPACE// /+}"
+          SPACE_ID=$(curl -sf \
+            -H "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+            "$OCTOPUS_URL/api/spaces?partialName=$ENCODED_SPACE" \
+            | jq -r --arg name "${{ env.OCTOPUS_SPACE }}" '.Items[] | select(.Name == $name) | .Id')
+
+          if [ -z "$SPACE_ID" ]; then
+            echo "ERROR: could not resolve space '${{ env.OCTOPUS_SPACE }}' to an ID" >&2
+            exit 1
+          fi
+
+          BASE_URL="$OCTOPUS_URL/api/$SPACE_ID"
+          PRINTED_LINES=0
+
+          while true; do
+            TASK_JSON=$(curl -sf \
+              -H "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+              "$BASE_URL/tasks/$TASK_ID")
+            CURL_EXIT=$?
+
+            if [ $CURL_EXIT -ne 0 ] || [ -z "$TASK_JSON" ]; then
+              echo "ERROR: API call failed (curl exit $CURL_EXIT) for $BASE_URL/tasks/$TASK_ID" >&2
+              exit 1
+            fi
+
+            IS_COMPLETED=$(echo "$TASK_JSON" | jq -r '.IsCompleted // false')
+            TASK_STATE=$(echo   "$TASK_JSON" | jq -r '.State       // "Unknown"')
+
+            RAW_LOGS=$(curl -sf \
+              -H "Authorization: Bearer $OCTOPUS_ACCESS_TOKEN" \
+              "$BASE_URL/tasks/$TASK_ID/raw")
+
+            if [ -n "$RAW_LOGS" ]; then
+              CURRENT_LINES=$(echo "$RAW_LOGS" | wc -l)
+              if [ "$CURRENT_LINES" -gt "$PRINTED_LINES" ]; then
+                echo "$RAW_LOGS" | sed -n "$((PRINTED_LINES + 1)),${CURRENT_LINES}p"
+                PRINTED_LINES=$CURRENT_LINES
+              fi
+            fi
+
+            if [ "$IS_COMPLETED" = "true" ]; then
+              [ "$TASK_STATE" = "Success" ] || exit 1
+              break
+            fi
+
+            sleep 5
+          done
