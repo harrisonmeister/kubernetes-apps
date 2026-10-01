@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salty-swordfish
+  labels:
+    app: salty-swordfish
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: salty-swordfish
+  template:
+    metadata:
+      labels:
+        app: salty-swordfish
+    spec:
+      containers:
+        - name: salty-swordfish
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salty-swordfish
+spec:
+  selector:
+    app: salty-swordfish
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
