@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: salty-sailor
+  labels:
+    app: salty-sailor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: salty-sailor
+  template:
+    metadata:
+      labels:
+        app: salty-sailor
+    spec:
+      containers:
+        - name: salty-sailor
+          image: nginx:1.27
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: salty-sailor
+spec:
+  selector:
+    app: salty-sailor
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP
