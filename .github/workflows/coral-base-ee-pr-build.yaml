@@ -1,4 +1,4 @@
-name: Coral Base EE PR Workflow
+name: "Coral Base EE: 1—PR Opened"
 
 on:
   pull_request:

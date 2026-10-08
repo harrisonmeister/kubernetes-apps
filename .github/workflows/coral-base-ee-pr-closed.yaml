@@ -1,4 +1,4 @@
-name: Coral Base EE PR Closed Workflow
+name: "Coral Base EE: 2—PR Closed"
 
 on:
   pull_request:
