@@ -1,4 +1,4 @@
-name: "Coral Base EE: main build"
+name: "Coral Base EE main: build"
 
 on:
   workflow_dispatch:
