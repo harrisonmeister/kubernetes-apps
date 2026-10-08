@@ -1,4 +1,4 @@
-name: "Coral Base EE: 2—PR Closed"
+name: "Coral Base EE PR: 2—Closed"
 
 on:
   pull_request:
