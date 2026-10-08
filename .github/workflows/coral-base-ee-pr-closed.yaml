@@ -1,0 +1,34 @@
+name: Coral Base EE PR Closed Workflow
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'apps/coral-base/**'
+env:
+  OCTOPUS_URL: ${{ vars.DEMO_OCTOPUS_URL }}
+  OCTOPUS_SPACE: ${{ vars.DEMO_OCTOPUS_SPACE }}
+  SERVICE_ACCOUNT_ID: 4d50c8ac-1515-4351-96a7-4a82d55d55ff
+  # Must match the Environment Name Template on the project's ephemeral environment channel
+  EPHEMERAL_ENVIRONMENT_NAME: pr-${{ github.event.pull_request.number }}
+jobs:
+  deprovision-ephemeral-environment:
+    name: Deprovision Ephemeral Environment 🐙
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: Login to Octopus Deploy 🐙
+      uses: OctopusDeploy/login@v1
+      with:
+        server: ${{ env.OCTOPUS_URL }}
+        service_account_id: ${{ env.SERVICE_ACCOUNT_ID }}
+    - name: Deprovision Ephemeral Environment 🐙
+      uses: OctopusDeploy/deprovision-ephemeral-environment@v1
+      id: "deprovision-environment"
+      with:
+        name: ${{ env.EPHEMERAL_ENVIRONMENT_NAME }}
+        project: "Coral Base - EE"
+    - name: Show deprovisioning runbook runs
+      run: echo '${{ steps.deprovision-environment.outputs.deprovisioning_runbook_runs }}'
+      shell: bash
