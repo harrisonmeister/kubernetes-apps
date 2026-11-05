@@ -6,7 +6,7 @@ import (
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "I am an application running in Kubernetes.")
+	fmt.Fprintf(w, "I am a demo application running in Kubernetes.")
 }
 
 func main() {
